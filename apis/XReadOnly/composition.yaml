@@ -1,0 +1,100 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xreadonly.aws.cast.ai
+  labels:
+    provider: aws
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: aws.cast.ai/v1alpha1
+    kind: XReadOnly
+  patchSets:
+  - name: common
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.deletionPolicy
+      toFieldPath: spec.deletionPolicy
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.providerConfigRef.name
+      toFieldPath: spec.providerConfigRef.name
+
+  resources:
+    - name: cast-ai-cluster-eksCluster-readonly
+      base:
+        apiVersion: castai.upbound.io/v1alpha1
+        kind: EksCluster
+        spec:
+          providerConfigRef:
+            name: default
+          writeConnectionSecretToRef:
+            namespace: flux-system
+      patches:
+        - type: PatchSet
+          patchSetName: common
+        - fromFieldPath: spec.forProvider.clusterName
+          toFieldPath: metadata.labels[cast-ai-cluster]
+        - fromFieldPath: spec.forProvider.clusterName
+          toFieldPath: spec.writeConnectionSecretToRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "castai-%s"
+        - fromFieldPath: spec.forProvider.region
+          toFieldPath: spec.forProvider.region
+        - fromFieldPath: spec.forProvider.accountId
+          toFieldPath: spec.forProvider.accountId
+          transforms:
+            - type: string
+              string:
+                type: Regexp
+                regexp:
+                  match: '(\d+)' 
+                  group: 1
+        - fromFieldPath: spec.forProvider.clusterName
+          toFieldPath: spec.forProvider.name
+        - fromFieldPath: spec.forProvider.deleteNodesOnDisconnect
+          toFieldPath: spec.forProvider.deleteNodesOnDisconnect
+        - fromFieldPath: spec.forProvider.assumeRoleArn
+          toFieldPath: spec.forProvider.assumeRoleArn
+
+    - name: cast-ai-cluster-helm-chart-agent
+      base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: Release
+        spec:
+          rollbackLimit: 3
+          forProvider:
+            namespace: castai-agent
+            chart:
+              name: castai-agent
+              repository: https://castai.github.io/helm-charts/
+              version: "0.58.1"
+            values:
+              provider: eks
+              createNamespace: false
+            set:
+              - name: apiKey
+                valueFrom:
+                  secretKeyRef:
+                    key: attribute.cluster_token
+                    namespace: crossplane-system
+                    optional: false
+      patches:
+        - type: PatchSet
+          patchSetName: common
+        - fromFieldPath: spec.forProvider.clusterName
+          toFieldPath: spec.forProvider.set[0].valueFrom.secretKeyRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "castai-%s"
+        - fromFieldPath: spec.forProvider.clusterName
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          transforms:
+            - type: match
+              match:
+                patterns:
+                  - type: regexp
+                    regexp: '.*'
+                    result: castai-agent

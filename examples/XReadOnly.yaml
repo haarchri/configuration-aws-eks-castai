@@ -1,0 +1,13 @@
+---
+apiVersion: aws.cast.ai/v1alpha1
+kind: XReadOnly
+metadata:
+  name: sample-read-only
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    clusterName: sample
+    region: eu-central-1
+    accountId: "123456789101"
+  providerConfigRef:
+    name: default

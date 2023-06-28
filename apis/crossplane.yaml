@@ -1,0 +1,40 @@
+apiVersion: meta.pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: platform-ref-castai
+  annotations:
+    meta.crossplane.io/source: github.com/haarchri/platform-ref-castai
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      This reference platform Configuration for CAST AI
+      CAST AI is the leading all-in-one platform for Kubernetes 
+      automation, optimization, security, and cost management.
+
+    meta.crossplane.io/readme: |
+      This reference platform Configuration for CAST AI
+      is a starting point to build, run, and operate A Serverless
+      abstraction and offer a self-service capability to your internal teams.
+      
+      The overall Composition supports the use case of onboarding to CAST AI platform.
+      This reference platform includes an XReadOnly Composition for creating Cluster in ReadOnly mode, 
+      and XFullAccess to promote Cluster in FullAccess Mode.
+      This Configuration uses AWS IAM service primitives from the [Upbound Official AWS
+      Provider](https://marketplace.upbound.io/providers/upbound/provider-aws) and CAST AI 
+      service promitived from the [CAST AI Provider](https://marketplace.upbound.io/providers/dkb-bank/provider-castai).
+
+      To learn more checkout the [GitHub
+      repo](https://github.com/haarchri/platform-ref-castai/) that you can copy and
+      customize to meet the exact needs of your organization!
+spec:
+  skipDependencyResolution: true
+  crossplane:
+    version: ">=v1.12.1-0"
+  dependsOn:
+    - provider: xpkg.upbound.io/upbound/provider-family-aws
+      version: ">=v0.36.0"
+    - provider: xpkg.upbound.io/upbound/provider-aws-iam
+      version: ">=v0.36.0"
+    - provider: xpkg.upbound.io/dkb-bank/provider-castai
+      version: ">=v0.5.0"
+    - provider: xpkg.upbound.io/crossplane-contrib/provider-helm
+      version: ">=v0.15.0"

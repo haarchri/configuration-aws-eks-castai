@@ -1,0 +1,20 @@
+apiVersion: aws.cast.ai/v1alpha1
+kind: XFullAccess
+metadata:
+  name: sample
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    clusterName: sample
+    vpc: vpc-123456789101
+    region: eu-central-1
+    accountId: "123456789101"
+    subnets:
+      - subnet-12345678910111212
+      - subnet-12345678910111213
+      - subnet-12345678910111214
+    securityGroups:
+      - sg-123456789101
+    image: bottlerocket-aws-k8s-1.24-x86_64*
+  providerConfigRef:
+    name: default
